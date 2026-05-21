@@ -1,4 +1,4 @@
-import { isPostgresDatabaseUrl } from "@/lib/db/database-url";
+import { isPostgresDatabaseUrl } from "./database-url";
 
 const PLACEHOLDER_PATTERN = /\@HOST[:/]|USER:PASSWORD|postgresql:\/\/USER@|\/DATABASE(\?|$)/i;
 

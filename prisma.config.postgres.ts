@@ -8,11 +8,12 @@ const root = process.cwd();
 const productionEnv = resolve(root, ".env.production");
 
 // PostgreSQL commands only — never load local `.env` (SQLite file:./dev.db).
+// Laptop: `.env.production`. Railway shell: DATABASE_URL from service variables.
 if (existsSync(productionEnv)) {
   config({ path: productionEnv, override: true });
-} else {
+} else if (!process.env.DATABASE_URL?.trim()) {
   throw new Error(
-    "Missing .env.production. Copy .env.production.example and paste your Railway DATABASE_URL.",
+    "Missing DATABASE_URL. Copy .env.production.example → .env.production (laptop) or set DATABASE_URL on Railway.",
   );
 }
 
