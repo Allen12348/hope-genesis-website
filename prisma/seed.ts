@@ -20,6 +20,7 @@ async function main() {
   loadSeedEnv();
   const prisma = await createSeedPrisma();
 
+  try {
   if (UPSERT_BASELINE) {
     await seedProductionBaseline(prisma);
     return;
@@ -220,12 +221,12 @@ async function main() {
   });
 
   console.log("Seed OK — users: admin@localhost / ChangeMe_Admin123!");
+  } finally {
+    await prisma.$disconnect();
+  }
 }
 
-main()
-  .then(() => prisma.$disconnect())
-  .catch(async (e) => {
-    console.error(e);
-    await prisma.$disconnect();
-    process.exit(1);
-  });
+main().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});

@@ -14,7 +14,7 @@
     "bench:artillery": "artillery run benchmarks/artillery/public-routes.yml",
     "preview": "npm run build:local && npm run start",
     "smoke:routes": "node scripts/smoke-routes.mjs",
-    "start": "next start -p 3000",
+    "start": "next start",
     "start:3001": "next start -p 3001",
     "lint": "next lint",
     "postinstall": "prisma generate",
