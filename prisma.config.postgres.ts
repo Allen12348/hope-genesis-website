@@ -1,10 +1,22 @@
 import { config } from "dotenv";
+import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { defineConfig, env } from "prisma/config";
+import { validateProductionDatabaseUrl } from "./lib/db/validate-production-database-url";
 
-// Production (Railway, VPS): load `.env.production` when present, else `.env`.
-config({ path: resolve(process.cwd(), ".env.production") });
-config({ path: resolve(process.cwd(), ".env"), override: false });
+const root = process.cwd();
+const productionEnv = resolve(root, ".env.production");
+
+// PostgreSQL commands only — never load local `.env` (SQLite file:./dev.db).
+if (existsSync(productionEnv)) {
+  config({ path: productionEnv, override: true });
+} else {
+  throw new Error(
+    "Missing .env.production. Copy .env.production.example and paste your Railway DATABASE_URL.",
+  );
+}
+
+validateProductionDatabaseUrl(process.env.DATABASE_URL, "db:migrate:deploy");
 
 /**
  * PostgreSQL migrations for Railway / Node production.
@@ -14,7 +26,7 @@ export default defineConfig({
   schema: "deploy/prisma/schema.prisma",
   migrations: {
     path: "deploy/prisma/migrations",
-    seed: "npx tsx prisma/seed.ts",
+    seed: "cross-env SEED_MODE=upsert SEED_TARGET=production npx tsx prisma/seed.ts",
   },
   datasource: {
     url: env("DATABASE_URL"),

@@ -1,0 +1,21 @@
+# =============================================================================
+# Wrangler local preview (`npm run preview`) — copy to `.dev.vars`
+# Never commit `.dev.vars`. Origins must match Wrangler (often :8787).
+# =============================================================================
+
+NEXTJS_ENV=development
+
+# Same as .env.example: generate with:
+#   node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+NEXTAUTH_SECRET=test-only-replace-with-node-randombytes-output
+
+# Must match the URL Wrangler prints (default is often port 8787).
+NEXTAUTH_URL=http://localhost:8787
+NEXT_PUBLIC_SITE_URL=http://localhost:8787
+
+# -----------------------------------------------------------------------------
+# Admin login on `npm run preview` (D1, not SQLite)
+# -----------------------------------------------------------------------------
+# Preview uses D1 (`DB` in wrangler.toml), not `DATABASE_URL`. `npm run db:seed`
+# only seeds SQLite. After `npm run db:migrate:d1`, run: npm run db:seed:d1:local
+# Then: admin@localhost / ChangeMe_Admin123! (see prisma/seed.ts).

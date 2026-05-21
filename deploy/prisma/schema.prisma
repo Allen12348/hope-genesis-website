@@ -3,12 +3,9 @@
 
 // Local development uses SQLite (file URL in DATABASE_URL).
 // Prisma Migrate history: prisma/migrations (SQLite). Railway/Postgres: deploy/prisma/migrations — docs/DATABASE.md.
-// Cloudflare D1: use Wrangler SQL in repo-root migrations/ (not prisma migrate deploy).
-
-// OpenNext Cloudflare expects the default client (no custom `output`) so the adapter can bundle correctly.
-// @see https://opennext.js.org/cloudflare/howtos/db#prisma-orm
 generator client {
   provider      = "prisma-client-js"
+  output        = "../../generated/prisma-postgres"
   binaryTargets = ["native", "debian-openssl-1.1.x"]
 }
 

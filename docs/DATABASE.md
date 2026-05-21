@@ -1,19 +1,16 @@
 # Database & migrations
 
-This repo supports **three** database targets:
+This repo supports **two** database targets:
 
 | Target | Schema sync | Seed |
 |--------|-------------|------|
 | **Local Node (SQLite)** | `npm run db:migrate:dev` or `npm run db:push` | `npm run db:seed` (dev reset) / `npm run db:seed:baseline` |
 | **Railway / VPS (PostgreSQL)** | `npm run db:migrate:deploy` | Run **inside production** — see below |
-| **Cloudflare D1** | `npm run db:migrate:d1:remote` | `npm run db:seed:d1:remote` |
 
 Prisma Migrate history lives in:
 
 - `prisma/migrations/` — **SQLite** (local development)
 - `deploy/prisma/migrations/` — **PostgreSQL** (Railway / Node production)
-
-The repo-root `migrations/` folder is **Wrangler D1 SQL**, not Prisma Migrate.
 
 ---
 
@@ -43,13 +40,20 @@ The repo-root `migrations/` folder is **Wrangler D1 SQL**, not Prisma Migrate.
 ## Production (Railway / PostgreSQL)
 
 1. Set `DATABASE_URL` to your Railway Postgres URL in the hosting dashboard (see `.env.production.example`).
-2. **On the production server / Railway deploy hook** (not your laptop’s SQLite `.env`):
+2. **On the production server / Railway shell** (recommended), or from your laptop with `.env.production`:
 
    ```bash
-   npm run db:migrate:sync-postgres-schema   # keep deploy/prisma/schema.prisma in sync
-   npm run db:migrate:deploy                 # applies deploy/prisma/migrations
-   npm run db:seed:baseline                  # first deploy — safe upsert
+   # Laptop only: copy Railway Postgres URL into .env.production first
+   copy .env.production.example .env.production
+   # Paste DATABASE_URL from Railway → Postgres → Connect (not HOST/USER placeholders)
+
+   npm run db:check:production   # fails fast if URL is missing or still a template
+   npm run db:migrate:sync-postgres-schema
+   npm run db:migrate:deploy
+   npm run db:seed:production
    ```
+
+   `db:migrate:deploy` does **not** read `.env` (SQLite). If you see P1012 “URL must start with postgresql://”, you’re still pointing at `file:./dev.db` — use `.env.production` or Railway’s shell.
 
    Or one command:
 
@@ -77,8 +81,3 @@ The repo-root `migrations/` folder is **Wrangler D1 SQL**, not Prisma Migrate.
 
 4. Commit `prisma/migrations`, `deploy/prisma/migrations`, and `deploy/prisma/schema.prisma`.
 
----
-
-## Cloudflare D1
-
-Unchanged: use `npm run db:migrate:d1:remote` and D1 seed scripts. Do not run Prisma Migrate deploy against D1.

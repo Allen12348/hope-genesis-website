@@ -1,0 +1,293 @@
+// Local development uses SQLite (file URL in DATABASE_URL).
+// Prisma Migrate history: prisma/migrations (SQLite). Railway/Postgres: deploy/prisma/migrations — docs/DATABASE.md.
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-1.1.x"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  STAFF
+  VIEWER
+}
+
+enum CmsPublishStatus {
+  DRAFT
+  PUBLISHED
+}
+
+/// Structured page payload (JSON). Homepage hero, section copy, and per-page blocks live here — avoids many small CMS tables.
+model PageContent {
+  id            String           @id @default(cuid())
+  pageKey       String           @unique
+  publishedData String
+  draftData     String?
+  status        CmsPublishStatus @default(PUBLISHED)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+}
+
+/// Singleton id: `singleton` — global toggles (homepage sections, floating actions, etc.).
+model SiteSettings {
+  id                    String   @id
+  sectionVisibilityJson String?
+  floatingActionsJson   String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+/// Singleton id: `singleton` — footer branding, columns, legal line (JSON payload).
+model FooterSection {
+  id          String   @id
+  payloadJson String   @default("{}")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+/// Per-route SEO overrides (path like `/`, `/about`).
+model SeoMetadata {
+  id              String   @id @default(cuid())
+  pagePath        String   @unique
+  metaTitle       String?
+  metaDescription String?
+  ogImageUrl      String?
+  keywords        String?
+  canonicalUrl    String?
+  updatedAt       DateTime @updatedAt
+}
+
+model User {
+  id           String       @id @default(cuid())
+  email        String       @unique
+  passwordHash String
+  name         String?
+  role         Role         @default(VIEWER)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  auditLogs    AuditLog[]
+  mediaAssets  MediaAsset[]
+}
+
+/// Uploaded images for the visual CMS media library (stored on disk locally or R2 in production).
+model MediaAsset {
+  id             String   @id @default(cuid())
+  folder         String
+  filename       String
+  mimeType       String
+  publicUrl      String
+  thumbnailUrl   String?
+  alt            String?
+  width          Int?
+  height         Int?
+  sizeBytes      Int      @default(0)
+  thumbSizeBytes Int?
+  uploadedById   String?
+  uploadedBy     User?    @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([folder])
+  @@index([createdAt])
+}
+
+model Service {
+  id               String   @id @default(cuid())
+  slug             String   @unique
+  title            String
+  shortDescription String
+  description      String
+  iconKey          String
+  category         String   @default("General")
+  highlights       String // JSON string[]
+  idealFor         String // JSON string[]
+  heroImage        String
+  /** Optional remote image URL — overrides `heroImage` when set and loads. */
+  imageUrl         String?
+  heroImageAlt     String
+  /** JSON array of { q: string, a: string } */
+  faqJson          String?
+  pricingNote      String?
+  seoTitle         String?
+  seoDescription   String?
+  published        Boolean  @default(true)
+  sortOrder        Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Project {
+  id                   String   @id @default(cuid())
+  slug                 String   @unique
+  title                String
+  category             String
+  /** Job lifecycle: completed | in_progress | planned */
+  status               String   @default("completed")
+  location             String?
+  year                 String?
+  summary              String?
+  scope                String? // JSON string[]
+  image                String?
+  /** Optional remote URL — overrides `image` when set and loads. */
+  imageUrl             String?
+  imageAlt             String?
+  beforeImage          String?
+  afterImage           String?
+  beforeImageUrl       String?
+  afterImageUrl        String?
+  /** Gallery frames — JSON string[] of http(s) URLs (stored via JSON.stringify). */
+  galleryImageUrls     String?
+  equipmentUsed        String? // JSON string[]
+  installationDuration String?
+  challenge            String?
+  solution             String?
+  results              String? // JSON string[]
+  /** JSON array of { label, value, suffix? } for hero stat chips. */
+  statsJson            String?
+  /** Shown on homepage featured strip when set. */
+  clientLabel          String?
+  testimonialId        String?
+  testimonial          Testimonial? @relation(fields: [testimonialId], references: [id], onDelete: SetNull)
+  published            Boolean  @default(true)
+  featured             Boolean  @default(false)
+  sortOrder            Int      @default(0)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
+
+model GalleryItem {
+  id        String   @id @default(cuid())
+  src       String
+  /** Optional remote URL — overrides `src` when set and loads. */
+  imageUrl  String?
+  alt       String
+  caption   String
+  category  String   @default("")
+  featured  Boolean  @default(false)
+  published Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Testimonial {
+  id          String    @id @default(cuid())
+  clientName  String
+  role        String    @default("Verified client")
+  company     String    @default("")
+  review      String
+  rating      Int
+  /** Optional remote image (http/https). */
+  imageUrl    String?
+  serviceType String    @default("General")
+  approved    Boolean   @default(false)
+  featured    Boolean   @default(false)
+  /** Moderation — hidden from public site when true. */
+  rejected    Boolean   @default(false)
+  /** e.g. PUBLIC_SUBMISSION, ADMIN, LEGACY */
+  source      String?
+  projects    Project[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model BlogPost {
+  id              String   @id @default(cuid())
+  slug            String   @unique
+  title           String
+  description     String
+  category        String
+  publishedAt     String
+  readingMinutes  Int
+  featured        Boolean  @default(false)
+  coverImage      String
+  /** Optional remote URL — overrides `coverImage` when set and loads. */
+  coverImageUrl   String?
+  coverAlt        String
+  body            String // JSON string[]
+  tags            String   @default("[]") // JSON string[]
+  metaTitle       String?
+  metaDescription String?
+  published       Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model CompanySettings {
+  id              String   @id // singleton: "singleton"
+  phoneDisplay    String
+  phoneE164       String
+  email           String
+  addressLine     String
+  fullAddress     String
+  hours           String
+  socialFacebook  String?
+  socialInstagram String?
+  socialLinkedin  String?
+  mapEmbedUrl     String?
+  whatsappUrl     String?
+  messengerUrl    String?
+  /** Homepage hero background — optional remote URL. */
+  heroImageUrl    String?
+  heroImageAlt    String?
+  /** Gaussian blur on homepage hero background image only (px). 0–20. */
+  heroBackgroundBlur Int @default(0)
+  /** Header mark — shown when no logo image or image fails to load. */
+  logoText            String   @default("HGE")
+  logoImageUrl        String?
+  /** Overrides public display name in header when set. */
+  companyName         String?
+  companySubtitle     String?
+  primaryCtaLabel     String   @default("Get Instant Estimate")
+  primaryCtaUrl       String   @default("/estimate")
+  callButtonLabel     String   @default("Call Now")
+  showPrimaryCta      Boolean  @default(true)
+  showCallButton      Boolean  @default(true)
+  showThemeToggle     Boolean  @default(true)
+  /** light | dark | system — applied for visitors without a saved theme preference. */
+  defaultTheme        String   @default("light")
+  updatedAt       DateTime @updatedAt
+}
+
+model NavigationItem {
+  id         String   @id @default(cuid())
+  label      String
+  href       String
+  sortOrder  Int      @default(0)
+  isVisible  Boolean  @default(true)
+  isActive   Boolean  @default(true)
+  isExternal Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model BrandPartner {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  monogram    String
+  imageUrl    String?
+  imageAlt    String?
+  description String?
+  category    String   @default("")
+  featured    Boolean  @default(false)
+  published   Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String
+  entity    String
+  entityId  String?
+  metadata  String? // JSON
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+}

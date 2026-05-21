@@ -12,6 +12,14 @@ const dest = join(root, "deploy", "prisma", "schema.prisma");
 
 let text = readFileSync(src, "utf8");
 text = text.replace(
+  /generator client \{[\s\S]*?\}/,
+  `generator client {
+  provider      = "prisma-client-js"
+  output        = "../../generated/prisma-postgres"
+  binaryTargets = ["native", "debian-openssl-1.1.x"]
+}`,
+);
+text = text.replace(
   /datasource db \{\s*provider = "sqlite"\s*url\s*=\s*env\("DATABASE_URL"\)\s*\}/,
   `datasource db {
   provider = "postgresql"

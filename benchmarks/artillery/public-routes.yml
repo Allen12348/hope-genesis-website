@@ -1,0 +1,18 @@
+config:
+  target: "http://localhost:3000"
+  phases:
+    - duration: 60
+      arrivalRate: 5
+      rampTo: 25
+      name: "Warm up and ramp"
+  defaults:
+    headers:
+      User-Agent: "HGE-Benchmark"
+
+scenarios:
+  - name: "Public routes"
+    flow:
+      - get:
+          url: "/"
+      - get:
+          url: "/sitemap.xml"

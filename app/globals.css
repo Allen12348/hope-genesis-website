@@ -2,26 +2,246 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    /* Hope Genesis — sky / light blue / white + ink for premium contrast */
+    --background: 210 40% 98%; /* #F8FAFC */
+    --foreground: 222 47% 11%; /* soft black #0F172A */
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    /* Primary CTA — sky #38BDF8, text ink on light for contrast */
+    --primary: 198 93% 60%;
+    --primary-foreground: 0 0% 0%;
+    /* Surfaces — soft blue #E0F2FE */
+    --secondary: 204 94% 94%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%; /* #64748B */
+    /* Highlights — light blue #7DD3FC */
+    --accent: 199 95% 74%;
+    --accent-foreground: 222 47% 11%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214 32% 83%; /* #CBD5E1 */
+    --input: 214 32% 83%;
+    --ring: 198 93% 52%;
+    --radius: 1rem;
+    /* Legacy brand keys — remapped to sky / ink (avoid mass refactors) */
+    --brand-navy: 222 47% 11%; /* #1E293B / ink */
+    --brand-navy-deep: 222 47% 7%;
+    --brand-royal: 198 93% 60%;
+    --brand-gold: 198 93% 60%;
+    --brand-gold-soft: 199 90% 88%;
   }
-}
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  .dark {
+    /* Deep black-blue stack — #020617 / #0F172A / #111827 */
+    --background: 222 47% 4%;
+    --foreground: 210 40% 98%;
+    --card: 222 47% 11%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 47% 11%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 198 93% 58%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 217 19% 17%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217 19% 17%;
+    --muted-foreground: 215 18% 65%;
+    --accent: 199 85% 48%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62% 45%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217 19% 23%;
+    --input: 217 19% 23%;
+    --ring: 198 93% 55%;
+    --brand-navy: 204 94% 94%;
+    --brand-navy-deep: 222 47% 4%;
+    --brand-royal: 198 93% 62%;
+    --brand-gold: 198 93% 62%;
+    --brand-gold-soft: 199 55% 32%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    overflow-x: clip;
+  }
+
+  body {
+    margin: 0;
+    @apply min-h-dvh bg-background text-foreground antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    :where(a, button, input, textarea, select, summary) {
+      transition-property: color, background-color, border-color, box-shadow, transform,
+        opacity;
+      transition-duration: 0.2s;
+      transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+  }
+
+  :where(a, button, input, textarea, select, summary):focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    .animate-marquee,
+    .animate-marquee-reverse {
+      animation: none !important;
+      transform: none !important;
+    }
+  }
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
   }
+
+  .glass-panel {
+    @apply border border-white/55 text-foreground shadow-glass backdrop-blur-2xl dark:border-white/10 dark:shadow-none;
+    background-color: rgb(255 255 255 / 0.88);
+  }
+
+  .dark .glass-panel {
+    background-color: hsl(var(--card) / 0.88);
+  }
+
+  /** Marketing cards — soft sky lift on hover */
+  .card-sky-hover {
+    @apply transition-[box-shadow,transform,border-color] duration-300 ease-out;
+  }
+  .card-sky-hover:hover {
+    box-shadow:
+      0 12px 40px -18px rgba(15, 23, 42, 0.1),
+      0 0 36px -14px rgba(56, 189, 248, 0.22);
+  }
+
+  .noise-overlay {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.028'/%3E%3C/svg%3E");
+  }
+
+  /** Subtle grid for marketing heroes and banded sections */
+  .bg-grid-fade {
+    background-size: 48px 48px;
+    background-image: linear-gradient(
+        to right,
+        hsl(var(--border) / 0.35) 1px,
+        transparent 1px
+      ),
+      linear-gradient(to bottom, hsl(var(--border) / 0.35) 1px, transparent 1px);
+  }
+
+  .section-fade {
+    @apply border-b border-border/50 bg-gradient-to-b from-muted/30 via-background to-background;
+  }
+
+  /** Light premium band (footer, subtle section anchors) */
+  .bg-brand-navy-gradient {
+    background-image: linear-gradient(
+      180deg,
+      hsl(204 94% 97%) 0%,
+      hsl(210 40% 98%) 42%,
+      hsl(210 40% 96%) 100%
+    );
+  }
+
+  .dark .bg-brand-navy-gradient {
+    background-image: linear-gradient(
+      180deg,
+      hsl(222 47% 11%) 0%,
+      hsl(222 47% 7%) 55%,
+      hsl(222 47% 4%) 100%
+    );
+  }
+
+  /** Soft cooling vignette for light sections */
+  .bg-cool-vignette {
+    background: radial-gradient(
+      ellipse 95% 60% at 50% -8%,
+      hsl(var(--primary) / 0.06),
+      transparent 55%
+    );
+  }
+
+  /** Homepage hero — cinematic left-to-right readability stack */
+  .hero-overlay-cinematic {
+    background-image: linear-gradient(
+      to right,
+      rgba(0, 0, 0, 0.58),
+      rgba(15, 23, 42, 0.38),
+      rgba(56, 189, 248, 0.1)
+    );
+  }
+
+  .dark .hero-overlay-cinematic {
+    background-image: linear-gradient(
+      to right,
+      rgba(0, 0, 0, 0.64),
+      rgba(15, 23, 42, 0.42),
+      rgba(56, 189, 248, 0.12)
+    );
+  }
+
+  /** Glass surfaces on top of cinematic hero imagery */
+  .hero-glass-chip {
+    @apply inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/15 px-3 py-1.5 text-xs font-medium text-white shadow-[0_8px_32px_-12px_rgba(0,0,0,0.35)] backdrop-blur-md transition duration-300 dark:bg-black/45;
+  }
+  .hero-glass-chip:hover {
+    @apply border-white/35 bg-white/20 dark:bg-black/55;
+  }
+
+  .hero-glass-stat {
+    @apply relative overflow-hidden rounded-2xl border border-white/20 bg-black/45 p-4 text-white shadow-[0_12px_40px_-16px_rgba(0,0,0,0.45)] backdrop-blur-xl transition duration-300 dark:bg-black/55 sm:p-5;
+  }
+  .hero-glass-stat:hover {
+    @apply -translate-y-0.5 border-sky-400/35 bg-black/55 dark:bg-black/65;
+  }
+
+  .hero-glass-badge {
+    @apply inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/15 px-3 py-1.5 text-sm text-white shadow-sm backdrop-blur-md dark:bg-black/45;
+  }
+
+  .section-divider-top {
+    position: relative;
+  }
+  .section-divider-top::before {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      hsl(var(--primary) / 0.22),
+      transparent
+    );
+  }
+
+  /** Balanced masonry for gallery grids */
+  .gallery-masonry {
+    column-gap: 1rem;
+  }
+  .gallery-masonry > * {
+    break-inside: avoid;
+    margin-bottom: 1rem;
+  }
+}
+
+/* Global refinements (kept in the same file so PostCSS always processes it). */
+::selection {
+  background: hsl(var(--primary) / 0.22);
 }
